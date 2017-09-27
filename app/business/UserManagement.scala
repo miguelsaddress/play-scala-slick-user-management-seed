@@ -47,6 +47,13 @@ class UserManagement @Inject() (userRepository: UserRepository) {
       }
     }
 
+    def findByUsername(mayBeUsername: Option[String]): Future[Option[User]] = {
+      mayBeUsername match {
+        case Some(username) => userRepository.findByUsername(username)
+        case _ => Future.successful(None)
+      }
+    }
+
     def fullList()(implicit ec: ExecutionContext): Future[Seq[User]] = {
         userRepository.list()
     }

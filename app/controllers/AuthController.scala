@@ -31,6 +31,10 @@ class AuthController @Inject()(
     Ok(views.html.user.signin(signInForm))
   }
 
+  def signOut = Action { implicit request =>
+    Redirect(routes.AuthController.signIn).withNewSession
+  }
+  
   /**
    * The add user action.
    *
@@ -44,10 +48,11 @@ class AuthController @Inject()(
       signInData => {
         users.signIn(signInData) map { r => 
           r match {
-          case Some(user) => Redirect(routes.DashboardController.index)
-          case None => Redirect(routes.AuthController.signIn).flashing(
-                        "error" -> Messages("error.signIn.wrongCredentials")
-                      )
+          case Some(user) => {
+            Redirect(routes.DashboardController.index).withSession("username" -> user.username)
+          }
+          case None => Redirect(routes.AuthController.signIn)
+                      .flashing("error" -> Messages("error.signIn.wrongCredentials"))
         }}
       }
     )
