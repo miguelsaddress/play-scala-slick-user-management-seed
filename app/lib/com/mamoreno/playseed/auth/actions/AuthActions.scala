@@ -24,7 +24,7 @@ class AuthActions @Inject() (iab: IdentityActionBuilder, uac: UserActionConstruc
 
 // When Calling the Action Refiners, it seems that we need an ActionBuilder first in the Chain
 // https://stackoverflow.com/a/40955537/1993756
-class IdentityActionBuilder @Inject() (parser: BodyParsers.Default)(implicit ec: ExecutionContext) 
+class IdentityActionBuilder @Inject() (parser: BodyParsers.Default)(implicit ec: ExecutionContext)
 extends ActionBuilderImpl(parser) {
   override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]): Future[Result] = {
     block(request)
@@ -32,13 +32,13 @@ extends ActionBuilderImpl(parser) {
 }
 
 class UserActionConstructs @Inject() (authorizationHandler: AuthorizationHandler)(implicit ec: ExecutionContext) {
-  
+
   def WithUserActionRefiner()(implicit ec: ExecutionContext) = new ActionRefiner[Request, RequestWithUserInfo] {
     def executionContext = ec
     def refine[A](request: Request[A]): Future[Either[Result, RequestWithUserInfo[A]]] = {
       authorizationHandler.userFromRequest(request).map { maybeUser =>
         maybeUser.map { user =>
-          Right(RequestWithUserInfo(UserInfo(user.username, user.role), request))
+          Right(RequestWithUserInfo(UserInfo(user.id, user.username, user.role), request))
         }.getOrElse {
           Left(authorizationHandler.onMustBeSignedIn)
         }
@@ -58,7 +58,7 @@ class UserActionConstructs @Inject() (authorizationHandler: AuthorizationHandler
       }
     }
   } //WithoutUserActionFilter
-  
+
   def WithUserRoleActionFilter(role: AuthRole)(implicit ec: ExecutionContext) = new ActionRefiner[RequestWithUserInfo, RequestWithUserInfo] {
     def executionContext = ec
     override protected def refine[A](request: RequestWithUserInfo[A]): Future[Either[Result, RequestWithUserInfo[A]]] = Future.successful {
